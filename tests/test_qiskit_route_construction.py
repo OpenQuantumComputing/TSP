@@ -66,6 +66,14 @@ def test_validity_controlled_phase_changes_only_valid_routes():
     n = cost_matrix.shape[0]
     circuit, layout = build_qiskit_tsp_construction_circuit(cost_matrix=cost_matrix, start_node=n - 1)
     state = np.asarray(Statevector.from_instruction(circuit).data)
+    ancillas = layout.state_wires + [layout.good_wire, layout.phase_wire]
+    leaked_probability = 0.0
+    for idx, amp in enumerate(state):
+        if abs(amp) < 1e-14:
+            continue
+        if any(((idx >> wire) & 1) for wire in ancillas):
+            leaked_probability += float(abs(amp) ** 2)
+    assert np.isclose(leaked_probability, 0.0, atol=1e-12)
 
     invalid_routes = [r for r in itertools.product(range(n - 1), repeat=layout.steps) if not classical_route_validity(r, n=n)]
     invalid_phases = [_amp_phase(state, route_basis_index(route, layout)) for route in invalid_routes]

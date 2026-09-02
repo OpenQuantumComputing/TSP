@@ -13,8 +13,9 @@ from src.qiskit_route_construction import (
 
 
 def build_normalized_cost_matrix(n: int, seed: int) -> np.ndarray:
-    np.random.seed(seed)
-    raw = cf.generate_cost_matrix(n)
+    rng = np.random.default_rng(seed)
+    raw = rng.uniform(0.0, 1.0, size=(n, n))
+    np.fill_diagonal(raw, 0.0)
     walks = cf.generate_all_walks(n, start_node=n - 1)
     all_costs = cf.find_all_cost(raw, walks)
     return raw / float(np.max(all_costs))
@@ -64,7 +65,9 @@ def main() -> None:
         layout=layout,
         cost_matrix=cost_matrix,
     )
-    df = df.sort_values(by=["validity", "expected_phi", "tour"], ascending=[False, True, True]).reset_index(drop=True)
+    df["tour_key"] = df["tour"].apply(tuple)
+    df = df.sort_values(by=["validity", "expected_phi", "tour_key"], ascending=[False, True, True]).reset_index(drop=True)
+    df = df.drop(columns=["tour_key"])
     df.to_csv(args.csv, index=False)
     plot_table(df, args.plot)
 

@@ -13,6 +13,7 @@ class RouteLayout:
     start_node: int
     steps: int
     bits_per_step: int
+    route_city_nodes: list[int]
     route_wires_by_step: list[list[int]]
     route_wires: list[int]
     state_wires: list[int]
@@ -31,6 +32,7 @@ def build_route_layout(n: int, start_node: int | None = None) -> RouteLayout:
 
     steps = n - 1
     bits_per_step = int(math.ceil(math.log2(n - 1)))
+    route_city_nodes = [node for node in range(n) if node != start_node]
     route_wires_by_step: list[list[int]] = []
     cursor = 0
     for _ in range(steps):
@@ -51,6 +53,7 @@ def build_route_layout(n: int, start_node: int | None = None) -> RouteLayout:
         start_node=start_node,
         steps=steps,
         bits_per_step=bits_per_step,
+        route_city_nodes=route_city_nodes,
         route_wires_by_step=route_wires_by_step,
         route_wires=route_wires,
         state_wires=state_wires,
@@ -119,6 +122,7 @@ def add_validity_controlled_cost_phase_oracle(
 
     first_step = layout.route_wires_by_step[0]
     for city in range(layout.n - 1):
+        actual_city = layout.route_city_nodes[city]
         city_bits = format(city, f"0{layout.bits_per_step}b")
         controls = [layout.good_wire] + first_step
         bits = "1" + city_bits
@@ -127,7 +131,7 @@ def add_validity_controlled_cost_phase_oracle(
             controls=controls,
             control_bits=bits,
             phase_wire=layout.phase_wire,
-            angle=float(cost_matrix[layout.start_node, city]),
+            angle=float(cost_matrix[layout.start_node, actual_city]),
         )
 
     for t in range(layout.steps - 1):
@@ -135,19 +139,22 @@ def add_validity_controlled_cost_phase_oracle(
         to_step = layout.route_wires_by_step[t + 1]
         controls = [layout.good_wire] + from_step + to_step
         for i in range(layout.n - 1):
+            actual_i = layout.route_city_nodes[i]
             i_bits = format(i, f"0{layout.bits_per_step}b")
             for j in range(layout.n - 1):
+                actual_j = layout.route_city_nodes[j]
                 j_bits = format(j, f"0{layout.bits_per_step}b")
                 _apply_phase_kickback(
                     circuit=circuit,
                     controls=controls,
                     control_bits="1" + i_bits + j_bits,
                     phase_wire=layout.phase_wire,
-                    angle=float(cost_matrix[i, j]),
+                    angle=float(cost_matrix[actual_i, actual_j]),
                 )
 
     last_step = layout.route_wires_by_step[-1]
     for city in range(layout.n - 1):
+        actual_city = layout.route_city_nodes[city]
         city_bits = format(city, f"0{layout.bits_per_step}b")
         controls = [layout.good_wire] + last_step
         bits = "1" + city_bits
@@ -156,7 +163,7 @@ def add_validity_controlled_cost_phase_oracle(
             controls=controls,
             control_bits=bits,
             phase_wire=layout.phase_wire,
-            angle=float(cost_matrix[city, layout.start_node]),
+            angle=float(cost_matrix[actual_city, layout.start_node]),
         )
 
 
@@ -181,10 +188,13 @@ def classical_route_validity(route: tuple[int, ...] | list[int], n: int) -> bool
 
 
 def classical_route_cost(cost_matrix: np.ndarray, route: tuple[int, ...] | list[int], start_node: int) -> float:
-    cost = float(cost_matrix[start_node, route[0]])
-    for i in range(len(route) - 1):
-        cost += float(cost_matrix[route[i], route[i + 1]])
-    cost += float(cost_matrix[route[-1], start_node])
+    n = int(cost_matrix.shape[0])
+    route_city_nodes = [node for node in range(n) if node != start_node]
+    route_nodes = [route_city_nodes[int(city)] for city in route]
+    cost = float(cost_matrix[start_node, route_nodes[0]])
+    for i in range(len(route_nodes) - 1):
+        cost += float(cost_matrix[route_nodes[i], route_nodes[i + 1]])
+    cost += float(cost_matrix[route_nodes[-1], start_node])
     return float(cost)
 
 
@@ -207,17 +217,23 @@ def build_route_phase_table(
     layout: RouteLayout,
     cost_matrix: np.ndarray,
 ) -> pd.DataFrame:
+    """Build a logical-route table with tour labels, validity, phase, expected phase, and probability."""
     rows = []
     for route in itertools.product(range(layout.n - 1), repeat=layout.steps):
         idx = route_basis_index(route, layout)
         amp = statevector[idx]
         validity = int(classical_route_validity(route, n=layout.n))
+        expected_phi = (
+            round(classical_route_cost(cost_matrix, route, layout.start_node), 8)
+            if validity
+            else np.nan
+        )
         rows.append(
             {
                 "tour": list(route),
                 "validity": validity,
                 "phi": round(wrap_to_pi(float(np.angle(amp))), 8),
-                "expected_phi": round(classical_route_cost(cost_matrix, route, layout.start_node), 8),
+                "expected_phi": expected_phi,
                 "prob": round(float(np.abs(amp) ** 2), 8),
             }
         )
