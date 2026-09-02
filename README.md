@@ -5,7 +5,8 @@ This repository is a small simulation sandbox for exploring quantum-inspired wor
 It currently includes:
 - a baseline phase-encoding pipeline,
 - an option-1 QSVT pipeline using a nonnegative quality map and monotonic filter,
-- a thresholded Grover pipeline (`cost_norm <= tau` marking).
+- a thresholded Grover pipeline (`cost_norm <= tau` marking),
+- a Qiskit construction with route register, reversible validity oracle, validity-controlled cost-phase oracle, and uncomputation.
 
 All experiments are currently set up for small `n` (default `n=5`) and are meant for simulator study, not scalable production solving.
 
@@ -33,6 +34,13 @@ All experiments are currently set up for small `n` (default `n=5`) and are meant
     - sweeps multiple threshold values,
     - runs an adaptive threshold-tightening loop from sampled costs,
     - writes per-threshold outputs plus grid/adaptive summaries.
+- `src/qiskit_route_construction.py`
+  - Qiskit building blocks for:
+    - route register superposition,
+    - reversible validity compute/uncompute,
+    - validity-controlled cost-phase oracle.
+- `qiskit_route_construction_example.py`
+  - Qiskit Aer statevector example that builds the per-route table (`tour`, `phi`, `validity`) and plots all entries.
 
 ## High-Level Flow
 
@@ -116,6 +124,22 @@ Output:
 - `tsp_threshold_grover_all_runs_summary.csv`
 - `tsp_threshold_grover_best_samples.csv`
 - `tsp_threshold_grover_best_ranking.csv`
+
+### Qiskit route/validity/cost-phase construction (Aer statevector)
+
+```bash
+python3 qiskit_route_construction_example.py --n 5 --seed 42
+```
+
+Output:
+- `qiskit_tsp_table.csv`
+- `qiskit_tsp_table.png` (plot of the full table entries)
+
+Run tests:
+
+```bash
+pytest -q
+```
 
 ## Notes
 
