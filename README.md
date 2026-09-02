@@ -130,7 +130,7 @@ Output:
 Open:
 
 ```bash
-jupyter notebook /home/runner/work/TSP/TSP/qiskit_route_construction_example.ipynb
+jupyter notebook qiskit_route_construction_example.ipynb
 ```
 
 Output:
