@@ -39,8 +39,8 @@ All experiments are currently set up for small `n` (default `n=5`) and are meant
     - route register superposition,
     - reversible validity compute/uncompute,
     - validity-controlled cost-phase oracle.
-- `qiskit_route_construction_example.py`
-  - Qiskit Aer statevector example that builds the per-route table (`tour`, `phi`, `validity`) and plots all entries.
+- `qiskit_route_construction_example.ipynb`
+  - Jupyter notebook using Qiskit Aer statevector simulation to build the per-route table (`tour`, `phi`, `validity`), plot all table entries, plot feasible/infeasible bitstrings, and plot the circuit.
 
 ## High-Level Flow
 
@@ -127,13 +127,17 @@ Output:
 
 ### Qiskit route/validity/cost-phase construction (Aer statevector)
 
+Open:
+
 ```bash
-python3 qiskit_route_construction_example.py --n 5 --seed 42
+jupyter notebook /home/runner/work/TSP/TSP/qiskit_route_construction_example.ipynb
 ```
 
 Output:
 - `qiskit_tsp_table.csv`
 - `qiskit_tsp_table.png` (plot of the full table entries)
+- `qiskit_tsp_validity_phi.png` (feasible and infeasible bitstring phase plot)
+- `qiskit_tsp_circuit.png` (circuit plot)
 
 Run tests:
 
