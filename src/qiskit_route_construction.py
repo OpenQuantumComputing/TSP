@@ -231,9 +231,9 @@ def build_route_phase_table(
         rows.append(
             {
                 "tour": list(route),
-                "validity": validity,
                 "phi": round(wrap_to_pi(float(np.angle(amp))), 8),
                 "expected_phi": expected_phi,
+                "validity": validity,
                 "prob": round(float(np.abs(amp) ** 2), 8),
             }
         )
