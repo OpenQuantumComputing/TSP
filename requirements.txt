@@ -2,3 +2,7 @@ numpy
 pandas
 pennylane
 pennylane-lightning
+matplotlib
+pytest
+qiskit
+qiskit-aer

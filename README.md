@@ -5,7 +5,8 @@ This repository is a small simulation sandbox for exploring quantum-inspired wor
 It currently includes:
 - a baseline phase-encoding pipeline,
 - an option-1 QSVT pipeline using a nonnegative quality map and monotonic filter,
-- a thresholded Grover pipeline (`cost_norm <= tau` marking).
+- a thresholded Grover pipeline (`cost_norm <= tau` marking),
+- a Qiskit construction with route register, reversible validity oracle, validity-controlled cost-phase oracle, and uncomputation.
 
 All experiments are currently set up for small `n` (default `n=5`) and are meant for simulator study, not scalable production solving.
 
@@ -33,6 +34,13 @@ All experiments are currently set up for small `n` (default `n=5`) and are meant
     - sweeps multiple threshold values,
     - runs an adaptive threshold-tightening loop from sampled costs,
     - writes per-threshold outputs plus grid/adaptive summaries.
+- `src/qiskit_route_construction.py`
+  - Qiskit building blocks for:
+    - route register superposition,
+    - reversible validity compute/uncompute,
+    - validity-controlled cost-phase oracle.
+- `qiskit_route_construction_example.ipynb`
+  - Jupyter notebook using Qiskit Aer statevector simulation to build the per-route table (`tour`, `phi`, `validity`), plot all table entries, plot feasible/infeasible bitstrings, and plot the circuit.
 
 ## High-Level Flow
 
@@ -116,6 +124,26 @@ Output:
 - `tsp_threshold_grover_all_runs_summary.csv`
 - `tsp_threshold_grover_best_samples.csv`
 - `tsp_threshold_grover_best_ranking.csv`
+
+### Qiskit route/validity/cost-phase construction (Aer statevector)
+
+Open:
+
+```bash
+jupyter notebook qiskit_route_construction_example.ipynb
+```
+
+Output:
+- `qiskit_tsp_table.csv`
+- `qiskit_tsp_table.png` (plot of the full table entries)
+- `qiskit_tsp_validity_phi.png` (feasible and infeasible bitstring phase plot)
+- `qiskit_tsp_circuit.png` (circuit plot)
+
+Run tests:
+
+```bash
+pytest -q
+```
 
 ## Notes
 
